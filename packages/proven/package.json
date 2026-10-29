@@ -1,0 +1,15 @@
+{
+  "name": "proven",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": { "proven": "./src/bin.ts" },
+  "exports": {
+    ".": "./src/index.ts",
+    "./proofs": "./src/proofs.ts",
+    "./rules": "./src/rules/index.ts",
+    "./rules/ship-safely": "./src/rules/ship-safely.ts",
+    "./rules/lockstep": "./src/rules/lockstep.ts",
+    "./kits": "./src/kits/index.ts"
+  },
+  "dependencies": { "cac": "6.7.14" }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "example-mixed",
+  "private": true,
+  "type": "module",
+  "scripts": { "check": "tsc --noEmit -p ." },
+  "dependencies": { "proven": "workspace:*" }
+}
