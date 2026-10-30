@@ -6,6 +6,7 @@ import { format } from "../src/engine/format.ts"
 import { Git } from "../src/engine/git.ts"
 import { claude, installClaude, installPreCommit, preCommit, sessionRef, stopBlockCap } from "../src/engine/hooks.ts"
 import { loadProject, Session } from "../src/engine/session.ts"
+import { project, proofs, rule } from "../src/index.ts"
 import { repo, type Repo } from "./helpers.ts"
 
 const src = resolve(import.meta.dir, "../src/index.ts")
@@ -78,6 +79,16 @@ describe("session", () => {
     const sha = await r.git("rev-parse", "HEAD")
     const s = await Session.open({ cwd: r.root, head: { rev: "HEAD" } })
     assert([s.revs.base, s.revs.head]).toEqual([sha, sha])
+  })
+
+  test("plan flags a proof no provider binds", async () => {
+    const r = await gated()
+    const { check } = proofs({ check: "check" })
+    const orphan = rule("orphan", { uses: { check } }, ({ expect }) => {
+      expect(check).toPass()
+    })
+    const plan = await (await Session.open({ cwd: r.root, project: project({ rules: [orphan], providers: [] } as never) })).plan()
+    assert(plan.rules[0]!.expectations[0]!.verdict).toMatchObject({ ok: false, planned: true, findings: [{ message: "no provider binds check" }] })
   })
 })
 

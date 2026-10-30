@@ -2,4 +2,4 @@
 coverage = true
 coverageThreshold = { lines = 1.0, functions = 1.0 }
 coverageSkipTestFiles = true
-coveragePathIgnorePatterns = ["**/proven-test-*/**", "packages/proven/src/bin.ts", "examples/**", "packages/proven/test/**"]
+coveragePathIgnorePatterns = ["**/proven-test-*/**", "packages/proven/src/bin.ts", "packages/proven/src/standalone.ts", "examples/**", "packages/proven/test/**"]

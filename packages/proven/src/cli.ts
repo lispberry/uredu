@@ -14,6 +14,8 @@ export interface IO {
   readonly stdin: () => Promise<string>
   readonly out: (text: string) => void
   readonly err: (text: string) => void
+  /** How installed hooks invoke proven; the standalone binary passes "proven". */
+  readonly command?: string
 }
 
 interface Flags {
@@ -84,7 +86,7 @@ export async function main(argv: readonly string[], io: IO): Promise<number> {
 
   cli
     .command("init", "Install the git pre-commit hook and Claude Code hooks for this repo")
-    .option("--command <cmd>", "How hooks invoke proven", { default: "bunx proven" })
+    .option("--command <cmd>", "How hooks invoke proven", { default: io.command ?? "bunx proven" })
     .option("--force", "Replace an existing pre-commit hook")
     .action(async (f: Flags) => {
       const git = await Git.open(io.cwd)

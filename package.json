@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test": "bun test && bun run test:types",
     "test:types": "tsc --noEmit -p packages/proven/test/types && bun run --cwd examples/mixed check",
-    "proven": "bun packages/proven/src/bin.ts"
+    "proven": "bun packages/proven/src/bin.ts",
+    "build": "bun build --compile --minify packages/proven/src/standalone.ts --outfile dist/proven"
   },
   "devDependencies": {
     "@types/bun": "1.2.20",

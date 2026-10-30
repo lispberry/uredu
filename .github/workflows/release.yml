@@ -1,0 +1,88 @@
+# Every push to main is tested. When packages/proven/package.json carries a version that has
+# no release yet, binaries are built for macOS and Linux, published as release v<version>
+# with a Homebrew formula attached, and lispberry/homebrew-proven picks the formula up.
+name: release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  version:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      released: ${{ steps.v.outputs.released }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(jq -r .version packages/proven/package.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::v$version is already released; bump packages/proven/package.json to ship a new one"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: version
+    if: needs.version.outputs.released == 'false'
+    strategy:
+      matrix:
+        include:
+          - { target: darwin-arm64, os: macos-latest }
+          - { target: darwin-x64, os: macos-latest }
+          - { target: linux-x64, os: ubuntu-latest }
+          - { target: linux-arm64, os: ubuntu-latest }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      - run: bun build --compile --minify --target=bun-${{ matrix.target }} packages/proven/src/standalone.ts --outfile dist/proven
+      - if: runner.os == 'macOS'
+        run: codesign --force --sign - dist/proven
+      - run: tar -czf proven-${{ matrix.target }}.tar.gz -C dist proven
+      - uses: actions/upload-artifact@v4
+        with:
+          name: proven-${{ matrix.target }}
+          path: proven-${{ matrix.target }}.tar.gz
+
+  publish:
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Formula
+        run: .github/scripts/formula.sh "${{ needs.version.outputs.version }}" dist > dist/proven.rb
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="v${{ needs.version.outputs.version }}"
+          gh release create "$v" dist/*.tar.gz dist/proven.rb --target "$GITHUB_SHA" --title "$v" --generate-notes
+      - name: Update the tap now
+        # Optional: with a HOMEBREW_TAP_TOKEN secret (actions:write on the tap) the tap updates
+        # immediately; without it, the tap's own schedule picks the release up within the hour.
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        if: env.GH_TOKEN != ''
+        run: gh workflow run update.yml --repo lispberry/homebrew-proven
