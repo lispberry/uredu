@@ -13,7 +13,7 @@
     "uredu": "bun packages/uredu/src/bin.ts",
     "build": "bun build --compile --minify packages/binary/src/main.ts --outfile dist/uredu",
     "build:types": "bun run --cwd packages/uredu build:types && bun run --cwd packages/ship-safely build:types && bun run --cwd packages/game build:types && bun run --cwd packages/ui build:types",
-    "publish:npm": "bun run build:types && for p in uredu ship-safely game ui; do (cd packages/$p && bun publish) || exit 1; done"
+    "publish:npm": "bun run build:types && rm -rf dist/npm && for p in uredu ship-safely game ui; do (cd packages/$p && bun pm pack --quiet --destination ../../dist/npm) || exit 1; done && for p in uredu uredu-ship-safely uredu-game uredu-ui; do npm publish dist/npm/$p-[0-9]*.tgz --access public || exit 1; done"
   },
   "devDependencies": {
     "@types/bun": "1.2.20",

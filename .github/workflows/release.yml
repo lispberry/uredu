@@ -91,18 +91,33 @@ jobs:
         run: gh workflow run update.yml --repo lispberry/homebrew-uredu
 
   npm:
-    # Optional: with an NPM_TOKEN secret (an automation token that can publish to the @uredu scope)
-    # the libraries are published to npm alongside the release. All four packages share one version.
-    needs: [version, build]
+    # Optional: with an NPM_TOKEN secret (a granular token that can publish to the @uredu scope and
+    # bypasses 2FA) the libraries are published once per version. Bun packs them, filling in the
+    # workspace versions; the npm CLI publishes. All four packages share one version.
+    needs: test
     runs-on: ubuntu-latest
     env:
-      NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v5
-        if: env.NPM_CONFIG_TOKEN != ''
+        if: env.NODE_AUTH_TOKEN != ''
+      - id: v
+        if: env.NODE_AUTH_TOKEN != ''
+        run: |
+          version=$(jq -r .version packages/uredu/package.json)
+          if npm view "uredu@$version" version >/dev/null 2>&1; then
+            echo "::notice::uredu@$version is already on npm"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: oven-sh/setup-bun@v2
-        if: env.NPM_CONFIG_TOKEN != ''
+        if: steps.v.outputs.publish == 'true'
         with:
           bun-version-file: .bun-version
-      - if: env.NPM_CONFIG_TOKEN != ''
+      - uses: actions/setup-node@v5
+        if: steps.v.outputs.publish == 'true'
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - if: steps.v.outputs.publish == 'true'
         run: bun install --frozen-lockfile && bun run publish:npm
