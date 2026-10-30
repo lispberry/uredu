@@ -22,7 +22,7 @@ jobs:
       version: ${{ steps.v.outputs.version }}
       released: ${{ steps.v.outputs.released }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: v
         env:
           GH_TOKEN: ${{ github.token }}
@@ -48,7 +48,7 @@ jobs:
           - { target: linux-arm64, os: ubuntu-latest }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
@@ -66,7 +66,7 @@ jobs:
     needs: [version, build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
         with:
           path: dist
