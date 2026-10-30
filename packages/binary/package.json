@@ -1,0 +1,12 @@
+{
+  "name": "uredu-binary",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "uredu": "workspace:*",
+    "@uredu/ship-safely": "workspace:*",
+    "@uredu/game": "workspace:*",
+    "@uredu/ui": "workspace:*",
+    "zod": "4.6.5"
+  }
+}

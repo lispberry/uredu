@@ -1,0 +1,44 @@
+{
+  "name": "@uredu/ui",
+  "version": "0.0.2",
+  "description": "uredu claims for UI: screens match base, screens are accessible",
+  "keywords": [
+    "uredu",
+    "verification",
+    "accessibility"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lispberry/uredu.git",
+    "directory": "packages/ui"
+  },
+  "homepage": "https://github.com/lispberry/uredu#readme",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "bun": ">=1.4.4"
+  },
+  "scripts": {
+    "build:types": "tsc -p tsconfig.build.json"
+  },
+  "peerDependencies": {
+    "uredu": "workspace:^",
+    "@uredu/ship-safely": "workspace:^",
+    "zod": "4.6.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

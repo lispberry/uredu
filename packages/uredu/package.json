@@ -1,0 +1,53 @@
+{
+  "name": "uredu",
+  "version": "0.0.2",
+  "description": "Typed claims that gate coding agents, git commits and CI: done means proven",
+  "keywords": [
+    "verification",
+    "coding-agents",
+    "claude-code",
+    "ci",
+    "pre-commit"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lispberry/uredu.git",
+    "directory": "packages/uredu"
+  },
+  "homepage": "https://github.com/lispberry/uredu#readme",
+  "type": "module",
+  "bin": {
+    "uredu": "./src/bin.ts"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./cli": {
+      "source": "./src/cli.ts",
+      "types": "./dist/cli.d.ts",
+      "default": "./src/cli.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "bun": ">=1.4.4"
+  },
+  "scripts": {
+    "build:types": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "cac": "6.7.14",
+    "zod": "4.6.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

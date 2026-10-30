@@ -1,6 +1,6 @@
-# Every push to main is tested. When packages/proven/package.json carries a version that has
+# Every push to main is tested. When packages/uredu/package.json carries a version that has
 # no release yet, binaries are built for macOS and Linux, published as release v<version>
-# with a Homebrew formula attached, and lispberry/homebrew-proven picks the formula up.
+# with a Homebrew formula attached, and lispberry/homebrew-uredu picks the formula up.
 name: release
 
 on:
@@ -27,11 +27,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(jq -r .version packages/proven/package.json)
+          version=$(jq -r .version packages/uredu/package.json)
+          for p in ship-safely game ui; do
+            [ "$(jq -r .version packages/$p/package.json)" = "$version" ] || { echo "::error::packages/$p/package.json must carry version $version too"; exit 1; }
+          done
           echo "version=$version" >> "$GITHUB_OUTPUT"
           if gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "released=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::v$version is already released; bump packages/proven/package.json to ship a new one"
+            echo "::notice::v$version is already released; bump packages/uredu/package.json to ship a new one"
           else
             echo "released=false" >> "$GITHUB_OUTPUT"
           fi
@@ -53,14 +56,14 @@ jobs:
         with:
           bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
-      - run: bun build --compile --minify --target=bun-${{ matrix.target }} packages/proven/src/standalone.ts --outfile dist/proven
+      - run: bun build --compile --minify --target=bun-${{ matrix.target }} packages/binary/src/main.ts --outfile dist/uredu
       - if: runner.os == 'macOS'
-        run: codesign --force --sign - dist/proven
-      - run: tar -czf proven-${{ matrix.target }}.tar.gz -C dist proven
+        run: codesign --force --sign - dist/uredu
+      - run: tar -czf uredu-${{ matrix.target }}.tar.gz -C dist uredu
       - uses: actions/upload-artifact@v4
         with:
-          name: proven-${{ matrix.target }}
-          path: proven-${{ matrix.target }}.tar.gz
+          name: uredu-${{ matrix.target }}
+          path: uredu-${{ matrix.target }}.tar.gz
 
   publish:
     needs: [version, build]
@@ -72,17 +75,34 @@ jobs:
           path: dist
           merge-multiple: true
       - name: Formula
-        run: .github/scripts/formula.sh "${{ needs.version.outputs.version }}" dist > dist/proven.rb
+        run: .github/scripts/formula.sh "${{ needs.version.outputs.version }}" dist > dist/uredu.rb
       - name: Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           v="v${{ needs.version.outputs.version }}"
-          gh release create "$v" dist/*.tar.gz dist/proven.rb --target "$GITHUB_SHA" --title "$v" --generate-notes
+          gh release create "$v" dist/*.tar.gz dist/uredu.rb --target "$GITHUB_SHA" --title "$v" --generate-notes
       - name: Update the tap now
         # Optional: with a HOMEBREW_TAP_TOKEN secret (actions:write on the tap) the tap updates
         # immediately; without it, the tap's own schedule picks the release up within the hour.
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         if: env.GH_TOKEN != ''
-        run: gh workflow run update.yml --repo lispberry/homebrew-proven
+        run: gh workflow run update.yml --repo lispberry/homebrew-uredu
+
+  npm:
+    # Optional: with an NPM_TOKEN secret (an automation token that can publish to the @uredu scope)
+    # the libraries are published to npm alongside the release. All four packages share one version.
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+        if: env.NPM_CONFIG_TOKEN != ''
+      - uses: oven-sh/setup-bun@v2
+        if: env.NPM_CONFIG_TOKEN != ''
+        with:
+          bun-version-file: .bun-version
+      - if: env.NPM_CONFIG_TOKEN != ''
+        run: bun install --frozen-lockfile && bun run publish:npm

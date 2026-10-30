@@ -2,3 +2,5 @@ node_modules
 dist
 *.tsbuildinfo
 .*.bun-build
+examples/.readme
+junit.xml

@@ -1,5 +1,5 @@
 {
-  "name": "proven-monorepo",
+  "name": "uredu-monorepo",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -7,15 +7,21 @@
     "examples/*"
   ],
   "scripts": {
-    "typecheck": "tsc -b",
-    "test": "bun test --timeout 30000 && bun run test:types",
-    "test:types": "tsc --noEmit -p packages/proven/test/types && bun run --cwd examples/mixed check",
-    "proven": "bun packages/proven/src/bin.ts",
-    "build": "bun build --compile --minify packages/proven/src/standalone.ts --outfile dist/proven"
+    "typecheck": "tsc -b && tsc --noEmit -p packages/uredu && tsc --noEmit -p packages/ship-safely && tsc --noEmit -p packages/game && tsc --noEmit -p packages/ui && tsc --noEmit -p packages/binary",
+    "test": "bun test && bun run test:types",
+    "test:types": "tsc --noEmit -p packages/uredu/test/types && bun run --cwd examples/mixed check && bun scripts/check-readme.ts",
+    "uredu": "bun packages/uredu/src/bin.ts",
+    "build": "bun build --compile --minify packages/binary/src/main.ts --outfile dist/uredu",
+    "build:types": "bun run --cwd packages/uredu build:types && bun run --cwd packages/ship-safely build:types && bun run --cwd packages/game build:types && bun run --cwd packages/ui build:types",
+    "publish:npm": "bun run build:types && for p in uredu ship-safely game ui; do (cd packages/$p && bun publish) || exit 1; done"
   },
   "devDependencies": {
     "@types/bun": "1.2.20",
     "typescript": "5.9.2",
-    "proven": "workspace:*"
+    "uredu": "workspace:*",
+    "@uredu/ship-safely": "workspace:*",
+    "@uredu/game": "workspace:*",
+    "@uredu/ui": "workspace:*",
+    "zod": "4.6.5"
   }
 }

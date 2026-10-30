@@ -1,0 +1,47 @@
+{
+  "name": "@uredu/ship-safely",
+  "version": "0.0.2",
+  "description": "uredu claims for shipping safely: builds, honest tests, regression tests",
+  "keywords": [
+    "uredu",
+    "verification"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lispberry/uredu.git",
+    "directory": "packages/ship-safely"
+  },
+  "homepage": "https://github.com/lispberry/uredu#readme",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./kits": {
+      "source": "./src/kits.ts",
+      "types": "./dist/kits.d.ts",
+      "default": "./src/kits.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "bun": ">=1.4.4"
+  },
+  "scripts": {
+    "build:types": "tsc -p tsconfig.build.json"
+  },
+  "peerDependencies": {
+    "uredu": "workspace:^",
+    "zod": "4.6.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -2,6 +2,13 @@
   "name": "example-mixed",
   "private": true,
   "type": "module",
-  "scripts": { "check": "tsc --noEmit -p ." },
-  "dependencies": { "proven": "workspace:*" }
+  "scripts": {
+    "check": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "uredu": "workspace:*",
+    "@uredu/ship-safely": "workspace:*",
+    "@uredu/game": "workspace:*",
+    "@uredu/ui": "workspace:*"
+  }
 }

@@ -1,3 +1,5 @@
+# CI is uredu gating uredu: the binary built from this commit runs the same rules
+# (uredu.ts) that gate commits and Claude Code sessions, over everything since the base.
 name: ci
 
 on:
@@ -7,7 +9,7 @@ on:
   workflow_call:
 
 jobs:
-  test:
+  uredu:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -23,10 +25,19 @@ jobs:
         with:
           tool: just
       - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun run test
-      - name: Binary smoke test
+      - run: bun run build
+      - name: Base
+        id: base
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
         run: |
-          bun run build
-          ./dist/proven --version
-          ./dist/proven plan
+          # a PR is proven against its target; a push against what the branch was before it.
+          # A new branch or the first push has no "before", so prove the whole history.
+          base=${PR_BASE:-$BEFORE}
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            base=$(git rev-list --max-parents=0 HEAD)
+          fi
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
+      - run: ./dist/uredu plan --base ${{ steps.base.outputs.sha }}
+      - run: ./dist/uredu run --base ${{ steps.base.outputs.sha }} --no-cache
